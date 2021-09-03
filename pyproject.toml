@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "aiogram_transitions"
+version = "0.1.0"
+description = ""
+authors = ["darksidecat <58224121+darksidecat@users.noreply.github.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+transitions = "^0.8.9"
+aiogram = { version = "^3.0.0a14", allow-prereleases = true}
+
+[tool.poetry.dev-dependencies]
+flake8 = "^3.9.2"
+isort = "^5.9.3"
+black = "^21.8b0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
