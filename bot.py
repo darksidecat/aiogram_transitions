@@ -8,6 +8,7 @@ from aiogram.dispatcher.fsm.context import FSMContext
 
 from base_machine import BaseMachine
 from form import Form
+from second_machine import StepMachine
 from transitions_filter import TransitionsFilter
 from transitions_middleware import TransitionsMiddleware
 
@@ -25,6 +26,10 @@ async def start_form(
     await form_machine.start(state)  # start machine
     await form_machine.proceed(message, state)  # first state
 
+    step_machine = StepMachine(machines=machines)
+    await step_machine.start(state)
+    await step_machine.proceed(message, state)
+
 
 async def machine(
     message: aiogram.types.Message,
@@ -32,6 +37,8 @@ async def machine(
     state: FSMContext,
 ):
     form_machine = machines.get(Form.__name__)
+    step_machine = machines.get(StepMachine.__name__)
+    await step_machine.proceed(message, state)
     await form_machine.proceed(message, state)  # next states
 
 
@@ -44,13 +51,15 @@ async def main():
     bot = Bot(BOT_TOKEN)
     dp = Dispatcher()
 
-    dp.update.outer_middleware(TransitionsMiddleware(Form))
+    dp.update.outer_middleware(TransitionsMiddleware(Form, StepMachine))
     dp.message.bind_filter(TransitionsFilter)
     dp.callback_query.bind_filter(TransitionsFilter)
 
     dp.message.register(start_form, commands={"start"})
 
-    form_states = [s for s in Form().states.values()]  # ToDo, improve this
+    form_states = [
+        s for s in Form().states.values() if s.name != "initial"
+    ]  # ToDo, improve this
     dp.message.register(machine, t_state=form_states)
 
     try:

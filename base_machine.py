@@ -1,10 +1,20 @@
+from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from aiogram.dispatcher.fsm.context import FSMContext
 from transitions.extensions import AsyncMachine
 
-MACHINE_TYPES = "machine_types"
+MACHINE_RECORDS = "machine_types"
 MACHINE_STATES = "machine_states"
+
+
+@dataclass
+class MachineRecord:
+    type: str
+    state: str
+
+
+MachineRecords = Dict[str, MachineRecord]
 
 
 class BaseMachine(AsyncMachine):
@@ -20,16 +30,21 @@ class BaseMachine(AsyncMachine):
     async def start(self, fsm_context: FSMContext):
         if self.machines is not None:
             self.machines[self.__class__.__name__] = self
-        await fsm_context.update_data(
-            {MACHINE_TYPES: self.__class__.__name__, MACHINE_STATES: self.state}
+
+        user_data = await fsm_context.get_data()
+        machine_records: MachineRecords = user_data.get(MACHINE_RECORDS)
+
+        machine_records[self.__class__.__name__] = MachineRecord(
+            type=self.__class__.__name__, state=self.state
         )
+        await fsm_context.update_data({MACHINE_RECORDS: machine_records})
 
     async def finish(self, fsm_context: FSMContext):
         if self.machines:
             self.machines.pop(self.__class__.__name__)
-        await fsm_context.update_data(
-            {
-                MACHINE_TYPES: None,
-                MACHINE_STATES: None,
-            }
-        )
+        user_data = await fsm_context.get_data()
+        machine_records: MachineRecords = user_data.get(MACHINE_RECORDS)
+
+        del machine_records[self.__class__.__name__]
+
+        await fsm_context.update_data({MACHINE_RECORDS: machine_records})
