@@ -1,11 +1,13 @@
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Dict
 
 from aiogram.dispatcher.fsm.context import FSMContext
 from pydantic import BaseModel
 from transitions.extensions import AsyncMachine
 
-MACHINE_RECORDS = "machine_types"
-MACHINE_STATES = "machine_states"
+if TYPE_CHECKING:
+    from machines_manager import MachinesManager
 
 
 class MachineRecord(BaseModel):
@@ -33,32 +35,15 @@ class BaseMachine(AsyncMachine):
     states = []
     transitions = []
 
-    def __init__(self, *args, machines: Optional[Dict[str, Any]] = None, **kwargs):
+    def __init__(self, *args, machines_manager: MachinesManager, **kwargs):
         super().__init__(
             *args, states=self.states, transitions=self.transitions, **kwargs
         )
-        self.machines = machines
+        self.name = self.__class__.__name__
+        self.machines_manager = machines_manager
 
     async def start(self, fsm_context: FSMContext):
-        if self.machines is not None:
-            self.machines[self.__class__.__name__] = self
-
-        user_data = await fsm_context.get_data()
-        machine_records: MachineRecords = MachineRecords.parse_raw(
-            user_data.get(MACHINE_RECORDS)
-        )
-
-        machine_records[self.__class__.__name__] = MachineRecord(
-            type=self.__class__.__name__, state=self.state
-        )
-        await fsm_context.update_data({MACHINE_RECORDS: machine_records.json()})
+        await self.machines_manager.activate_machine(self)
 
     async def finish(self, fsm_context: FSMContext):
-        if self.machines:
-            self.machines.pop(self.__class__.__name__)
-
-        user_data = await fsm_context.get_data()
-        machine_records = MachineRecords.parse_raw(user_data.get(MACHINE_RECORDS))
-        del machine_records[self.__class__.__name__]
-
-        await fsm_context.update_data({MACHINE_RECORDS: machine_records.json()})
+        await self.machines_manager.deactivate_machine(self)

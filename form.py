@@ -1,10 +1,9 @@
-from typing import Any, Dict, Optional
-
 from aiogram import html, types
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.types import Message
 
 from base_machine import BaseMachine
+from machines_manager import MachinesManager
 
 
 class Form(BaseMachine):
@@ -18,8 +17,8 @@ class Form(BaseMachine):
         ["proceed", "gender", "show"],
     ]
 
-    def __init__(self, *args, machines: Optional[Dict[str, Any]] = None, **kwargs):
-        super().__init__(self, *args, machines=machines, **kwargs)
+    def __init__(self, *args, machines_manager: MachinesManager = None, **kwargs):
+        super().__init__(self, *args, machines_manager=machines_manager, **kwargs)
 
     async def on_enter_name(self, message: Message, state: FSMContext):
         await message.answer("Hi there! What's your name?")

@@ -1,13 +1,12 @@
 import asyncio
 import logging
-from typing import Dict
 
 import aiogram.types
 from aiogram import Bot, Dispatcher
 from aiogram.dispatcher.fsm.context import FSMContext
 
-from base_machine import BaseMachine
 from form import Form
+from machines_manager import MachinesManager
 from step_machine import StepMachine
 from transitions_filter import TransitionsFilter
 from transitions_middleware import TransitionsMiddleware
@@ -20,24 +19,25 @@ BOT_TOKEN = "BOT TOKEN"
 async def start_form(
     message: aiogram.types.Message,
     state: FSMContext,
-    machines: Dict[str, BaseMachine],
+    machines_manager: MachinesManager,
 ):
-    form_machine = Form(machines=machines)
+    form_machine = Form(machines_manager=machines_manager)
     await form_machine.start(state)  # start machine
     await form_machine.proceed(message, state)  # first state
 
-    step_machine = StepMachine(machines=machines)
+    step_machine = StepMachine(machines_manager=machines_manager)
     await step_machine.start(state)
     await step_machine.proceed(message, state)
 
 
 async def machine(
     message: aiogram.types.Message,
-    machines: Dict[str, BaseMachine],
+    machines_manager: MachinesManager,
+
     state: FSMContext,
 ):
-    form_machine = machines.get(Form.__name__)
-    step_machine = machines.get(StepMachine.__name__)
+    form_machine = machines_manager.manager(Form)
+    step_machine = machines_manager.manager(StepMachine)
     await step_machine.proceed(message, state)
     await form_machine.proceed(message, state)  # next states
 
