@@ -1,10 +1,13 @@
+from typing import Any, Dict, Optional
+
 from aiogram import html, types
 from aiogram.dispatcher.fsm.context import FSMContext
 from aiogram.types import Message
-from transitions.extensions import AsyncMachine
+
+from base_machine import BaseMachine
 
 
-class Form(AsyncMachine):
+class Form(BaseMachine):
     states = ["initial", "name", "save_name", "age", "save_age", "gender", "show"]
     transitions = [
         ["proceed", "initial", "name"],
@@ -15,12 +18,8 @@ class Form(AsyncMachine):
         ["proceed", "gender", "show"],
     ]
 
-    def __init__(self):
-        super().__init__(
-            self,
-            states=self.states,
-            transitions=self.transitions,
-        )
+    def __init__(self, *args, machines: Optional[Dict[str, Any]] = None, **kwargs):
+        super().__init__(self, *args, machines=machines, **kwargs)
 
     async def on_enter_name(self, message: Message, state: FSMContext):
         await message.answer("Hi there! What's your name?")
@@ -73,4 +72,5 @@ class Form(AsyncMachine):
             parse_mode="HTML",
         )
 
+        await self.finish(state)
         await state.clear()

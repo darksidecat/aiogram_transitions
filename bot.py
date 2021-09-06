@@ -1,35 +1,38 @@
 import asyncio
 import logging
+from typing import Dict
 
 import aiogram.types
 from aiogram import Bot, Dispatcher
 from aiogram.dispatcher.fsm.context import FSMContext
-from transitions.extensions.asyncio import AsyncMachine
 
+from base_machine import BaseMachine
 from form import Form
 from transitions_filter import TransitionsFilter
 from transitions_middleware import TransitionsMiddleware
 
 logger = logging.getLogger(__name__)
 
-BOT_TOKEN = "BOT_TOKEN"
+BOT_TOKEN = "BOT TOKEN"
 
 
 async def start_form(
     message: aiogram.types.Message,
     state: FSMContext,
+    machines: Dict[str, BaseMachine],
 ):
-    form_machine = Form()
-    await state.update_data(machine=form_machine)
-    await form_machine.proceed(message, state)  # start machine
+    form_machine = Form(machines=machines)
+    await form_machine.start(state)  # start machine
+    await form_machine.proceed(message, state)  # first state
 
 
 async def machine(
     message: aiogram.types.Message,
-    machine: AsyncMachine,
+    machines: Dict[str, BaseMachine],
     state: FSMContext,
 ):
-    await machine.proceed(message, state)  # next states
+    form_machine = machines.get(Form.__name__)
+    await form_machine.proceed(message, state)  # next states
 
 
 async def main():
@@ -41,7 +44,7 @@ async def main():
     bot = Bot(BOT_TOKEN)
     dp = Dispatcher()
 
-    dp.update.outer_middleware(TransitionsMiddleware())
+    dp.update.outer_middleware(TransitionsMiddleware(Form))
     dp.message.bind_filter(TransitionsFilter)
     dp.callback_query.bind_filter(TransitionsFilter)
 
