@@ -8,7 +8,7 @@ from aiogram.dispatcher.fsm.context import FSMContext
 
 from base_machine import BaseMachine
 from form import Form
-from second_machine import StepMachine
+from step_machine import StepMachine
 from transitions_filter import TransitionsFilter
 from transitions_middleware import TransitionsMiddleware
 

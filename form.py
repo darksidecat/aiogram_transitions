@@ -73,4 +73,3 @@ class Form(BaseMachine):
         )
 
         await self.finish(state)
-        await state.clear()

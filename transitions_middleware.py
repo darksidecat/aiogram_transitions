@@ -1,3 +1,4 @@
+import json
 from typing import Any, Awaitable, Callable, Dict, Type
 
 from aiogram import BaseMiddleware
@@ -27,10 +28,11 @@ class TransitionsMiddleware(BaseMiddleware[Update]):
         fsm_context: FSMContext = data["state"]
         user_data = await fsm_context.get_data()
 
-        machine_records: MachineRecords = user_data.get(MACHINE_RECORDS)
-
         data[MACHINES] = {}
-        if machine_records:
+        records = user_data.get(MACHINE_RECORDS)
+        if records:
+            machine_records: MachineRecords = MachineRecords.parse_raw(records)
+
             for machine_record in machine_records.values():
                 m = self.machines[machine_record.type]
                 data[MACHINES][machine_record.type] = m(
@@ -38,14 +40,17 @@ class TransitionsMiddleware(BaseMiddleware[Update]):
                     initial=machine_records[machine_record.type].state,
                 )
         else:
-            await fsm_context.update_data({MACHINE_RECORDS: {}})
+            await fsm_context.update_data(
+                {MACHINE_RECORDS: MachineRecords.parse_obj({}).json()}
+            )
 
         result = await handler(event, data)
 
         user_data = await fsm_context.get_data()
-        machine_records: MachineRecords = user_data.get(MACHINE_RECORDS)
+        records = user_data.get(MACHINE_RECORDS)
+        if records:
+            machine_records: MachineRecords = MachineRecords.parse_raw(records)
 
-        if machine_records:
             for machine_record in machine_records.values():
                 machine: BaseMachine = data[MACHINES].get(machine_record.type)
                 if machine:
@@ -53,7 +58,9 @@ class TransitionsMiddleware(BaseMiddleware[Update]):
                         type=machine.__class__.__name__, state=machine.state
                     )
 
-                    await fsm_context.update_data({MACHINE_RECORDS: machine_records})
+                    await fsm_context.update_data(
+                        {MACHINE_RECORDS: machine_records.json()}
+                    )
 
         return result
 
