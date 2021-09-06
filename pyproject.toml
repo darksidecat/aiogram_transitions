@@ -7,7 +7,7 @@ authors = ["darksidecat <58224121+darksidecat@users.noreply.github.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 transitions = "^0.8.9"
-aiogram = { version = "^3.0.0a14", allow-prereleases = true}
+aiogram = {git = "https://git@github.com/aiogram/aiogram.git", rev = "dev-3.x"}
 
 [tool.poetry.dev-dependencies]
 flake8 = "^3.9.2"

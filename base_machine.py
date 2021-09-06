@@ -2,14 +2,14 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 from aiogram.dispatcher.fsm.context import FSMContext
+from pydantic import BaseModel
 from transitions.extensions import AsyncMachine
 
 MACHINE_RECORDS = "machine_types"
 MACHINE_STATES = "machine_states"
 
 
-@dataclass
-class MachineRecord:
+class MachineRecord(BaseModel):
     type: str
     state: str
 
