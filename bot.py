@@ -36,8 +36,8 @@ async def machine(
 
     state: FSMContext,
 ):
-    form_machine = machines_manager.manager(Form)
-    step_machine = machines_manager.manager(StepMachine)
+    form_machine = machines_manager.machine(Form)
+    step_machine = machines_manager.machine(StepMachine)
     await step_machine.proceed(message, state)
     await form_machine.proceed(message, state)  # next states
 

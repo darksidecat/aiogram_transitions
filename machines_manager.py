@@ -39,8 +39,8 @@ class MachinesManager:
 
         await self.fsm_context.update_data({MACHINE_RECORDS: machine_records.json()})
 
-    def manager(self, manager: Type[BaseMachine]):
-        return self.active_machines.get(manager.__name__)
+    def machine(self, machine: Type[BaseMachine]):
+        return self.active_machines.get(machine.__name__)
 
     async def create_user_machines(self):
         user_data = await self.fsm_context.get_data()
