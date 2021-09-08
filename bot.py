@@ -33,7 +33,6 @@ async def start_form(
 async def machine(
     message: aiogram.types.Message,
     machines_manager: MachinesManager,
-
     state: FSMContext,
 ):
     form_machine = machines_manager.machine(Form)
@@ -57,10 +56,7 @@ async def main():
 
     dp.message.register(start_form, commands={"start"})
 
-    form_states = [
-        s for s in Form().states.values() if s.name != "initial"
-    ]  # ToDo, improve this
-    dp.message.register(machine, t_state=form_states)
+    dp.message.register(machine, TransitionsFilter(machine=Form(), exclude=["initial"]))
 
     try:
         logger.error("Starting bot")
